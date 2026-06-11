@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { MenuItem, Branch } from '../types/types'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 export default function Home() {
   const navigate = useNavigate()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
@@ -12,12 +14,12 @@ export default function Home() {
   const [reservationSuccess, setReservationSuccess] = useState(false)
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/menu')
+    fetch(`${API}/menu`)
       .then(res => res.json())
       .then(data => setMenuItems(data))
       .catch(() => {})
 
-    fetch('http://localhost:5000/api/branches')
+    fetch(`${API}/branches`)
       .then(res => res.json())
       .then(data => setBranches(data))
       .catch(() => {})
@@ -26,7 +28,7 @@ export default function Home() {
   const handleReservation = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const res = await fetch('http://localhost:5000/api/reservations', {
+      const res = await fetch(`${API}/reservations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reservation)
@@ -353,14 +355,14 @@ function OnlineOrder({ branches, menuItems }: { branches: Branch[], menuItems: M
     }
     setLoading(true)
     try {
-      const customerRes = await fetch('http://localhost:5000/api/customers', {
+      const customerRes = await fetch(`${API}/customers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(customerInfo)
       })
       const customer = await customerRes.json()
 
-      const staffRes = await fetch(`http://localhost:5000/api/users/branch/${selectedBranch}`)
+      const staffRes = await fetch(`${API}/users/branch/${selectedBranch}`)
       const staff = await staffRes.json()
       const waiter = staff.find((u: any) => u.role === 'WAITER' || u.role === 'CASHIER')
 
@@ -370,14 +372,14 @@ function OnlineOrder({ branches, menuItems }: { branches: Branch[], menuItems: M
         return
       }
 
-      const loginRes = await fetch('http://localhost:5000/api/auth/login', {
+      const loginRes = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: waiter.email, password: 'password123' })
       })
       const loginData = await loginRes.json()
 
-      await fetch('http://localhost:5000/api/orders', {
+      await fetch(`${API}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${loginData.token}` },
         body: JSON.stringify({
@@ -408,7 +410,6 @@ function OnlineOrder({ branches, menuItems }: { branches: Branch[], menuItems: M
 
   return (
     <div style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '32px' }}>
-      {/* Steps */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
         {['Select Branch', 'Choose Items', 'Your Details'].map((s, i) => (
           <div key={s} style={{ flex: 1, textAlign: 'center' }}>
@@ -423,7 +424,6 @@ function OnlineOrder({ branches, menuItems }: { branches: Branch[], menuItems: M
         ))}
       </div>
 
-      {/* Step 1 */}
       {step === 1 && (
         <div>
           <h3 style={{ color: '#ccc', marginBottom: '16px' }}>Which branch would you like to order from?</h3>
@@ -448,7 +448,6 @@ function OnlineOrder({ branches, menuItems }: { branches: Branch[], menuItems: M
         </div>
       )}
 
-      {/* Step 2 */}
       {step === 2 && (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '24px' }}>
@@ -515,7 +514,6 @@ function OnlineOrder({ branches, menuItems }: { branches: Branch[], menuItems: M
         </div>
       )}
 
-      {/* Step 3 */}
       {step === 3 && (
         <div>
           <h3 style={{ color: '#ccc', marginBottom: '16px' }}>Your Details</h3>
