@@ -10,7 +10,7 @@ import Payments from './pages/Payments'
 import Home from './pages/Home'
 import Reservations from './pages/Reservations'
 
-const ProtectedRoute = ({ children, roles }: { children: JSX.Element, roles?: string[] }) => {
+const ProtectedRoute = ({ children, roles }: { children: React.ReactElement, roles?: string[] }) => {
   const { user, isLoading } = useAuth()
   if (isLoading) return <div style={{ color: '#fff', padding: '20px' }}>Loading...</div>
   if (!user) return <Navigate to="/login" />
