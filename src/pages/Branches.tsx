@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { Branch } from '../types/types'
+import { useAuth } from '../context/AuthContext'
 
 export default function Branches() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -38,9 +40,18 @@ export default function Branches() {
     }
   }
 
+  const handleDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return
+    try {
+      await api.delete(`/branches/${id}`)
+      fetchBranches()
+    } catch {
+      setError('Failed to delete branch')
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#1a1a1a', color: '#fff' }}>
-      {/* Header */}
       <div style={{
         backgroundColor: '#2a2a2a',
         padding: '16px 32px',
@@ -59,25 +70,21 @@ export default function Branches() {
           }}>← Back</button>
           <h1 style={{ color: '#e63946', margin: 0 }}>🏢 Branches</h1>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          style={{
+        {user?.role === 'ADMIN' && (
+          <button onClick={() => setShowForm(!showForm)} style={{
             backgroundColor: '#e63946',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
             padding: '8px 16px',
             cursor: 'pointer'
-          }}
-        >
-          + Add Branch
-        </button>
+          }}>+ Add Branch</button>
+        )}
       </div>
 
       <div style={{ padding: '32px' }}>
         {error && <div style={{ color: '#ff6b6b', marginBottom: '16px' }}>{error}</div>}
 
-        {/* Add Branch Form */}
         {showForm && (
           <div style={{
             backgroundColor: '#2a2a2a',
@@ -133,7 +140,6 @@ export default function Branches() {
           </div>
         )}
 
-        {/* Branches Grid */}
         {loading ? (
           <div style={{ color: '#888' }}>Loading...</div>
         ) : (
@@ -171,11 +177,26 @@ export default function Branches() {
                     display: 'flex',
                     gap: '16px',
                     borderTop: '1px solid #333',
-                    paddingTop: '16px'
+                    paddingTop: '16px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
                   }}>
-                    <span style={{ color: '#ccc', fontSize: '13px' }}>👥 {branch._count.users} staff</span>
-                    <span style={{ color: '#ccc', fontSize: '13px' }}>📋 {branch._count.orders} orders</span>
-                    <span style={{ color: '#ccc', fontSize: '13px' }}>🪑 {branch._count.tables} tables</span>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <span style={{ color: '#ccc', fontSize: '13px' }}>👥 {branch._count.users} staff</span>
+                      <span style={{ color: '#ccc', fontSize: '13px' }}>📋 {branch._count.orders} orders</span>
+                      <span style={{ color: '#ccc', fontSize: '13px' }}>🪑 {branch._count.tables} tables</span>
+                    </div>
+                    {user?.role === 'ADMIN' && !branch.isHQ && (
+                      <button onClick={() => handleDelete(branch.id, branch.name)} style={{
+                        backgroundColor: 'transparent',
+                        color: '#ff6b6b',
+                        border: '1px solid #ff6b6b',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}>Delete</button>
+                    )}
                   </div>
                 )}
               </div>
